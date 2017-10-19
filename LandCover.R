@@ -57,5 +57,30 @@ NLCD.lc<-as.integer(sapply(strsplit(NLCD_PIHM.lc[,1], split = " "), "[" , 2)) ;
 NLCD_to_PIHM<-merge(data.frame(NLCD.lc, PIHM.lc), vegprmt.tbl, by.x= "PIHM.lc", by.y= "INDEX", all=T) ;
 
 
+NLCD_to_PIHM[!is.na(NLCD_to_PIHM$NLCD.lc),]
 
 
+######### Load the attribute file to change the LC codes from NLCD to the NEw PIHM
+
+att<-read.table("C:/Felipe/PIHM-CYCLES/PIHM/PIHM_Felipe/CNS/Manhantango/HydroTerreFullManhantango/HansYostDeepCreek/Aug2920171550/4DataModelLoader/MergeVectorLayer000_q30_a200000.att",as.is=T,col.names=c('Index', 'Soil', 'Geol','LC','IS_IC', 'Snw_IC', 'Srf_IC', 'Ust_IC', 'St_IC', 'Ppt', 'Tmp', 'RH', 'Wnd', 'Rn', 'G', 'VP', 'S', 'mF', 'BC.0', 'BC.1', 'BC.2', 'mP'));
+
+names(att)
+
+######### MErge with the NLCD_to_PIHM data to change the NLCD LC data to the MM-PIHM Land Cover
+
+
+att.expanded<-merge(att,NLCD_to_PIHM, by.x="LC", by.y="NLCD.lc", all.x=T ) ;
+
+
+###### change the name of the LC column that will be used in the revised attributes
+
+revised.names<-names(att)   ;
+
+revised.names[4]<- "PIHM.lc" ;
+
+Revised.att<-att.expanded[order(att.expanded$Index),revised.names] ;
+
+names(Revised.att)[4]<-'LC'  ;
+
+
+write.table(Revised.att[,c('Index', 'Soil', 'Geol','LC','IS_IC', 'Snw_IC', 'Srf_IC', 'Ust_IC', 'St_IC', 'Ppt', 'Tmp', 'RH', 'Wnd', 'Rn', 'G', 'VP', 'S', 'mF', 'BC.0', 'BC.1', 'BC.2', 'mP')], file="C:/Felipe/PIHM-CYCLES/PIHM/PIHM_Felipe/CNS/Manhantango/HydroTerreFullManhantango/HansYostDeepCreek/Aug2920171550/4DataModelLoader/Revised.att" , row.names=F, quote=F , sep = "\t" ) ; # ,col.names=header.att, quote=F
