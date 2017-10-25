@@ -84,3 +84,120 @@ names(Revised.att)[4]<-'LC'  ;
 
 
 write.table(Revised.att[,c('Index', 'Soil', 'Geol','LC','IS_IC', 'Snw_IC', 'Srf_IC', 'Ust_IC', 'St_IC', 'Ppt', 'Tmp', 'RH', 'Wnd', 'Rn', 'G', 'VP', 'S', 'mF', 'BC.0', 'BC.1', 'BC.2', 'mP')], file="C:/Felipe/PIHM-CYCLES/PIHM/PIHM_Felipe/CNS/Manhantango/HydroTerreFullManhantango/HansYostDeepCreek/Aug2920171550/4DataModelLoader/Revised.att" , row.names=F, quote=F , sep = "\t" ) ; # ,col.names=header.att, quote=F
+
+
+###############################################################################################################
+#                         Add correction for the river material units in the .riv file
+#                         Taken and adapted from the R code PIHMInputs on the PIHM_R_Scripts directory
+#                         2017 10 25 By Felipe Montes
+###############################################################################################################
+
+
+#######Taken from the 
+
+# *************************************************READ THE RIVER FILE . riv  ****************************************************
+
+
+
+# The river file has several blocks of data in the same file
+# It starts with a single column in the first row names NumRiv, which indicates the number of river segments
+# Then is has a block of data with the river elements and nodes. This block has the following variables:
+# Index FromNode ToNode Down LeftEle RightEle Shape Material IC BC Res
+
+# Variable Name: Variable Type: Variable Description: Remarks
+# NumRiv Integer Number of River Segments
+# Index Integer River Segment ID Beginning with 1
+# FromNode Integer From Node ID
+# ToNode Integer To Node ID
+# Down Integer Downstream Segment ID
+# LeftEle Integer Left Element ID
+# RightEle Integer Right Element ID
+# Shape Integer Shape ID
+# Material Integer Material ID
+# IC Integer Initial Condition ID
+# BC Integer Boundary Condition ID
+# Res Integer Reservoir ID
+
+River.file<-'C:/Felipe/PIHM-CYCLES/PIHM/PIHM_Felipe/CNS/Manhantango/HydroTerreFullManhantango/HansYostDeepCreek/Aug2920171550/4DataModelLoader/MergeVectorLayer000_q30_a200000.riv'
+
+NumRiv<-read.table(River.file,as.is=T,nrows=1)[1,1];
+
+
+riv.elements<-read.table(River.file,as.is=T,skip=1,nrows=NumRiv,col.names=c('Index', 'FromNode', 'ToNode', 'Down', 'LeftEle', 'RightEle', 'Shape', 'Material', 'IC', 'BC', 'Res'));
+
+# the the files continues with a block containing shape attributes. The block starts with a row with two coulms "Shape" and "NumShape"
+# Then it is followed by a list of attributes regarding the shape: Index Depth InterpOrd WidCoeff
+
+# Variable Name: Variable Type: Variable Description: Remarks
+# Index Integer Shape ID Beginning with 1
+# Depth Double Depth of the River Segment
+# InterpOrder Integer Interpolation Order * 1 if a rectangular
+# WidCoeff Double Width Coefficient * width if a rectangular
+# * Interpolation Order (b) and Widht Coefficient (a) are parameters defining relation between Width and Depth of a river segment as: [D = a x (W/2)b].
+
+shape<-read.table(River.file,as.is=T,skip=1+NumRiv,nrows=1);
+
+NumShape<-shape[1,2];
+
+riv.shape<-read.table(River.file, as.is=T,skip=1+NumRiv+1,nrows=NumShape,col.names=c('Index', 'Depth', 'InterpOrd', 'WidCoeff'));
+
+
+# Afterwards the file continues with the Material information for the river shapes. The block starts with a row with two coulms "Material" and NumMat
+# The file continues with 6 columns with the following attribute values: Index n Cwr KsatH KsatV Bed
+
+# Variable Name: Variable Type: Variable Description: Remarks
+# NumMat Integer Number of Material Types
+# Index Integer Material ID Beginning with 1
+# n Double Manning's Roughness Coefficient
+# Cwr Double Discharge Coefficient
+# KsatH Double Size Hydraulic Conductivity
+# KsatV Double Bed Hydraulic Conductivity
+# Bed Double Bed Depth
+
+
+
+Material<-read.table(River.file,as.is=T,skip=1+NumRiv+1+NumShape,nrows=1);
+
+NumMat<-Material[1,2];
+
+riv.material<-read.table(River.file,as.is=T,skip=1+NumRiv+1+NumShape+1,nrows=NumMat,col.names=c('Index', 'n', 'Cwr', 'KsatH','KsatV','Bed'));
+
+
+# The river file then continues with a block describing the initial conditions for the river elements.
+# The block starts with a row with two coulms "IC" and NumIC
+# Then it has a block of with two coulms: Index Value
+
+
+# Variable Name: Variable Type: Variable Description: Remarks
+# NumIC Integer Number of Initial Condition Types
+# Index Integer Initial Condition ID Beginning with 1
+# Value Double Intial Condition Water Table
+
+IC<-read.table(River.file,as.is=T,skip=1+NumRiv+1+NumShape+1+NumMat,nrows=1);
+
+NumIC<-IC[1,2]; 
+
+riv.IC<-read.table(River.file,as.is=T,skip=NumRiv+1+NumShape+1+1+NumMat+1,nrows=NumIC,col.names=c('Index', 'Value'));
+
+
+# Finaly the river file contains the boundary condition information
+# It starts with a row with two coulms "BC" and NumBC. NumBC indicates the number of boundary conditions time series. In this example the NumBC=0, therefore there is no information about the boundary conditions. 
+# see the PIHM2x_input_file_format.pdf file
+
+BC<-read.table(River.file,as.is=T,skip=1+NumRiv+1+NumShape+1+NumMat+1+NumIC,nrows=1);
+
+NumBC<-BC[1,2];
+
+
+# Finally the river file has a last line with a double coumn and following variables "Res" NumRes
+# this information indicates the number of reservoirs
+
+
+
+Res<-read.table(River.file,as.is=T,skip=1+NumRiv+1+NumShape+1+NumMat+1+NumIC+max(c(NumBC,1)),nrows=1);
+
+
+
+
+
+
