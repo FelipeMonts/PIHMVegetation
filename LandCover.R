@@ -93,7 +93,6 @@ write.table(Revised.att[,c('Index', 'Soil', 'Geol','LC','IS_IC', 'Snw_IC', 'Srf_
 ###############################################################################################################
 
 
-#######Taken from the 
 
 # *************************************************READ THE RIVER FILE . riv  ****************************************************
 
@@ -197,6 +196,86 @@ NumBC<-BC[1,2];
 Res<-read.table(River.file,as.is=T,skip=1+NumRiv+1+NumShape+1+NumMat+1+NumIC+max(c(NumBC,1)),nrows=1);
 
 
+###############################################################################################################
+#                         Print the corrected  .riv file in th right format
+#                         Taken and adapted from the R code MM_PHIMinputs on the PIHM_R_Scripts directory
+#                         2017 10 25 By Felipe Montes
+###############################################################################################################
+
+
+
+
+###################   Write the appropiate formated "River" File for the MM-PIHM input format  #################################
+
+######## path to print the revised River file .riv
+
+Revised.River.File<-"C:/Felipe/PIHM-CYCLES/PIHM/PIHM_Felipe/CNS/Manhantango/HydroTerreFullManhantango/HansYostDeepCreek/Aug2920171550/4DataModelLoader/Revised.riv"
+
+##   Add river elements
+header.riv<-c( NumRiv, 'FROM' , 'TO' ,  'DOWN' , 	'LEFT' , 	'RIGHT' , 	'SHAPE' ,	'MATERIAL' ,	'IC' ,	'BC' ,	'RES' )  ;
+
+write.table(riv.elements,file=Revised.River.File, row.names=F , col.names=header.riv, quote=F, sep= "\t" ) ;
+
+
+##    Add river Shape
+
+
+## write the word Shape as title before writting the tabel with the data
+
+Shape.title<-c('Shape');
+
+write.table(Shape.title,file=Revised.River.File , row.names=F , col.names=F, quote=F, append=T , sep= "\t") ;
+
+
+header.riv.Shape<-c(NumShape, 'DPTH' ,  'OINT' ,	'CWID' );
+
+write.table(riv.shape,file=Revised.River.File, row.names=F , col.names=header.riv.Shape, quote=F, append=T, sep = "\t") ;
+
+
+##   Add river Material
+
+Material.title<-('MATERIAL');
+
+
+
+write.table(Material.title,file=Revised.River.File, row.names=F , col.names=F, quote=F, append=T , sep = "\t") ;
+
+
+header.riv.Material<-c( NumMat , 'ROUGH' ,  'CWR' ,	'KH' ,	'KV' ,	'BEDTHICK');
+
+##  Convert units of Manning's roughness coefficient [day m-1/3] , River bank hydraulic conductivity (horizontal KH) and
+##   River bed hydraulic conductivity (vertical KV) [m/day] into  [s m-1/3] and [m/s] 
+
+riv.material$ROUGH<-riv.material$n * 86400  ;
+
+riv.material$KH<-riv.material$KsatH / 86400  ;
+
+riv.material$KV<-riv.material$KsatV / 86400  ;
+
+
+
+write.table(riv.material[,c('Index','ROUGH' ,  'Cwr' ,	'KH' ,	'KV' ,	'Bed')],file=Revised.River.File , row.names=F , col.names=header.riv.Material, quote=F, append=T , sep = "\t") ;
+
+
+##### The initial condition was removed from the current version of the .riv file
+# ##   Add initial condition  ###
+# 
+# IC.title<-c('IC');
+# 
+# write.table(IC.title,file=paste0(inputfile.name, ".riv") , row.names=F , col.names=F, quote=F, append=T , sep = "\t") ;
+# 
+# 
+# write.table(riv.IC, file=paste0(inputfile.name, ".riv") , row.names=F , col.names= c(NumIC, 'HRIV'), quote=F, append=T , sep = "\t") ;
+
+##   Add boundary condition
+
+
+write.table(BC[2],file=Revised.River.File, row.names=F , col.names= c('BC'), quote=F, append=T, sep = "\t") ;
+
+
+##   Add Reservoirs
+
+write.table(Res[2],file=Revised.River.File, row.names=F , col.names=c('RES'), quote=F, append=T , sep = "\t") ;
 
 
 
